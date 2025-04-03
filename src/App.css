@@ -1,7 +1,10 @@
 .app {
   width: 100%;
-  height: 100vh;
-  background-color: #FAFAFA;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg-color);
   font-family: 'Noto Sans SC', sans-serif;
 }
 
@@ -10,6 +13,23 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+/* 自定义颜色变量 */
+:root {
+  --primary-color: #1a73e8;
+  --secondary-color: #e3f2fd;
+  --text-color: #333333;
+  --border-color: #e0e0e0;
+  --background-color: #ffffff;
+  --error-color: #d32f2f;
+  --success-color: #2e7d32;
 }
 
 /* Tailwind 配置 */
@@ -31,25 +51,34 @@
 }
 
 /* 按钮样式 */
-.btn {
-  @apply px-4 py-2 rounded-lg transition-colors;
-}
-
-.btn-primary {
-  @apply bg-primary text-white hover:bg-primary/90;
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  font-family: inherit;
 }
 
 /* 输入框样式 */
-.input {
-  @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50;
+input {
+  border: none;
+  outline: none;
+  background: none;
+  font-family: inherit;
 }
 
 /* 动画 */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fade-in {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.3s ease-out;
 } 

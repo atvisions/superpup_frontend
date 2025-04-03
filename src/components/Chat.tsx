@@ -18,39 +18,35 @@ const Chat: React.FC = () => {
     const [inputMessage, setInputMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         console.log('[Chat] Setting up event listeners');
         // 监听消息响应
-        const cleanupResponse = window.electron.onMessageResponse((response: any) => {
-            console.log('[Chat] Received message response:', response);
-            if (response.success) {
+        if (window.electron) {
+            window.electron.receive('chat-message-response', (response: any) => {
+                console.log('[Chat] Received message response:', response);
+                if (response.success) {
+                    setMessages(prev => [...prev, {
+                        type: 'ai',
+                        content: response.response.message,
+                        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+                    }]);
+                }
+                setIsLoading(false);
+            });
+
+            // 监听错误
+            window.electron.onError((error: string) => {
+                console.error('[Chat] Received error:', error);
                 setMessages(prev => [...prev, {
                     type: 'ai',
-                    content: response.response.message,
+                    content: error,
                     time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
                 }]);
-            }
-            setIsLoading(false);
-        });
-
-        // 监听错误
-        const cleanupError = window.electron.onError((error: string) => {
-            console.error('[Chat] Received error:', error);
-            setMessages(prev => [...prev, {
-                type: 'ai',
-                content: error,
-                time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-            }]);
-            setIsLoading(false);
-        });
-
-        return () => {
-            console.log('[Chat] Cleaning up event listeners');
-            cleanupResponse();
-            cleanupError();
-        };
+                setIsLoading(false);
+            });
+        }
     }, []);
 
     const handleSendMessage = (e: React.FormEvent) => {
@@ -69,7 +65,9 @@ const Chat: React.FC = () => {
         setIsLoading(true);
 
         // 发送消息到后端
-        window.electron.sendMessage(inputMessage);
+        if (window.electron) {
+            window.electron.send('chat-message', inputMessage);
+        }
     };
 
     return (

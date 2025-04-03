@@ -1,13 +1,14 @@
-export interface ElectronAPI {
-    minimize: () => void;
-    close: () => void;
-    sendMessage: (message: string) => void;
-    onMessageResponse: (callback: (response: { success: boolean; response: { message: string } }) => void) => () => void;
-    onError: (callback: (error: string) => void) => () => void;
+interface ElectronAPI {
+    send: (channel: string, data: any) => void;
+    receive: (channel: string, func: (response: any) => void) => void;
+    onError: (callback: (error: string) => void) => void;
+    onThemeUpdated: (callback: (isDark: boolean) => void) => void;
 }
 
 declare global {
     interface Window {
         electron: ElectronAPI;
     }
-} 
+}
+
+export {}; 

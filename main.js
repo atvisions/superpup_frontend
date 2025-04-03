@@ -24,10 +24,10 @@ async function sendToBackend(message) {
         'Accept': 'application/json',
         'Access-Control-Allow-Origin': '*'
       },
-      timeout: 90000, // 增加到90秒超时
+      timeout: 90000,
       withCredentials: false,
       validateStatus: function (status) {
-        return status >= 200 && status < 500; // 接受所有非500错误的状态码
+        return status >= 200 && status < 500;
       }
     });
     
@@ -97,13 +97,9 @@ ipcMain.on('chat-message', async (event, message) => {
 });
 
 let mainWindow;
-let petWindow;
 let tray;
 
 function createMainWindow() {
-  const iconPath = path.join(__dirname, 'icon.png');
-  console.log('[Main] Icon path:', iconPath);
-
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -112,7 +108,7 @@ function createMainWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, 'pet.webp'),
+    icon: path.join(__dirname, 'src/assets/pet.webp'),
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#ffffff'
   });
@@ -135,7 +131,7 @@ function createMainWindow() {
 
   // 创建系统托盘
   try {
-    tray = new Tray(path.join(__dirname, 'pet.webp'));
+    tray = new Tray(path.join(__dirname, 'src/assets/pet.webp'));
     const contextMenu = Menu.buildFromTemplate([
       { label: '显示', click: () => mainWindow.show() },
       { label: '退出', click: () => app.quit() }
@@ -158,40 +154,12 @@ function createMainWindow() {
   });
 }
 
-function createPetWindow() {
-  petWindow = new BrowserWindow({
-    width: 200,
-    height: 200,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
-    },
-    skipTaskbar: true
-  });
-
-  petWindow.loadFile('src/pet.html');
-
-  // 设置窗口位置
-  const { width, height } = require('electron').screen.getPrimaryDisplay().workAreaSize;
-  petWindow.setPosition(width - 220, height - 220);
-
-  // 开发环境打开开发者工具
-  if (isDev) {
-    petWindow.webContents.openDevTools();
-  }
-}
-
 app.whenReady().then(() => {
   createMainWindow();
-  createPetWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createMainWindow();
-      createPetWindow();
     }
   });
 });
@@ -208,12 +176,5 @@ ipcMain.on('toggle-main-window', () => {
     mainWindow.hide();
   } else {
     mainWindow.show();
-  }
-});
-
-// 处理主题变化
-ipcMain.on('theme-changed', (event, theme) => {
-  if (petWindow) {
-    petWindow.webContents.send('theme-changed', theme);
   }
 });
