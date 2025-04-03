@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI宠物</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=6c23dff6dc6df8b7cbcfd2282921ccbb"></script>
     <style>
         :root {
             --app-width: 800px;
@@ -253,6 +254,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 16px;
+            padding-bottom: 100px;
             background-color: var(--chat-bg);
             display: flex;
             flex-direction: column;
@@ -262,7 +264,7 @@
             top: var(--header-height);
             left: var(--nav-width);
             right: 0;
-            bottom: 160px;
+            bottom: 180px;
         }
 
         .message {
@@ -350,8 +352,16 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
-            gap: 16px;
             height: 120px;
+            position: relative;
+            justify-content: space-between;
+        }
+
+        .input-area {
+            position: relative;
+            height: 60px;
+            display: flex;
+            align-items: flex-start;
         }
 
         .input-box input {
@@ -362,19 +372,21 @@
             font-size: 14px;
             color: var(--text-color);
             min-width: 0;
-            height: 60px;
+            height: 24px;
             line-height: 24px;
-            resize: none;
+            padding: 0;
         }
 
         .input-box input::placeholder {
             color: var(--nav-text);
+            opacity: 0.6;
         }
 
         .input-bottom {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-top: auto;
         }
 
         .model-selector {
@@ -633,6 +645,84 @@
         .model-selector.active i.ri-arrow-down-s-line {
             transform: rotate(180deg);
         }
+
+        .input-prefix {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--nav-active);
+            font-size: 14px;
+            line-height: 24px;
+            user-select: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            height: 24px;
+            padding-right: 8px;
+        }
+
+        .input-prefix i {
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .input-prefix i:hover {
+            background-color: var(--border-color);
+        }
+
+        .input-prefix span {
+            white-space: nowrap;
+        }
+
+        .input-box.image-mode input {
+            padding-left: 105px;
+        }
+
+        .input-box.image-mode .input-prefix {
+            margin-bottom: 0;
+            z-index: 1;
+        }
+
+        .input-desc {
+            color: var(--nav-text);
+            font-size: 13px;
+            margin-left: 8px;
+        }
+
+        #map-container {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 800px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .map-controls {
+            padding: 10px;
+            text-align: right;
+        }
+        
+        #close-map {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            background: #f0f0f0;
+            cursor: pointer;
+        }
+        
+        #close-map:hover {
+            background: #e0e0e0;
+        }
     </style>
 </head>
 <body>
@@ -666,9 +756,9 @@
 
     <!-- 聊天页面 -->
     <div class="page active" id="chat-page">
-        <!-- 聊天区域 -->
-        <div class="chat-container" id="chat-container">
-            <!-- 消息会在这里动态添加 -->
+    <!-- 聊天区域 -->
+    <div class="chat-container" id="chat-container">
+        <!-- 消息会在这里动态添加 -->
         </div>
 
         <!-- 输入区域包装器 -->
@@ -676,9 +766,9 @@
             <!-- 标签区域 -->
             <div class="tags-container">
                 <div class="tags-wrapper">
-                    <div class="tag">
-                        <i class="ri-edit-line"></i>
-                        <span>帮我写作</span>
+                    <div class="tag active">
+                        <i class="ri-chat-smile-2-line"></i>
+                        <span>聊闲话</span>
                     </div>
                     <div class="tag">
                         <i class="ri-image-edit-line"></i>
@@ -704,12 +794,18 @@
                 <div class="tags-edit" id="tags-edit">
                     <i class="ri-settings-line"></i>
                 </div>
-            </div>
+    </div>
 
-            <!-- 输入区域 -->
-            <div class="input-container">
-                <div class="input-box">
-                    <input type="text" placeholder="你可以问我任何问题..." id="message-input">
+    <!-- 输入区域 -->
+    <div class="input-container">
+        <div class="input-box">
+                    <div class="input-area">
+                        <div class="input-prefix" id="input-prefix" style="display: none;">
+                            <i class="ri-arrow-left-line"></i>
+                            <span>@图像生成</span>
+                        </div>
+                        <input type="text" placeholder="你可以问我任何问题..." id="message-input">
+                    </div>
                     <div class="input-bottom">
                         <div class="model-selector" id="model-selector">
                             <img src="./assets/deepseek.png" alt="Deepseek" class="model-logo">
@@ -745,9 +841,9 @@
                                 <div class="input-action">
                                     <i class="ri-mic-line"></i>
                                 </div>
-                            </div>
-                            <div class="send-button" id="send-button">
-                                <i class="ri-send-plane-fill"></i>
+        </div>
+        <div class="send-button" id="send-button">
+            <i class="ri-send-plane-fill"></i>
                             </div>
                         </div>
                     </div>
@@ -760,10 +856,22 @@
     <div class="page" id="history-page">
         <div class="history-container" id="history-container">
             <!-- 历史记录会在这里动态添加 -->
+            </div>
+    </div>
+
+    <!-- 在 body 中添加地图容器 -->
+    <div id="map-container" style="display: none;">
+        <div id="map" style="width: 100%; height: 400px;"></div>
+        <div class="map-controls">
+            <button id="close-map">关闭地图</button>
         </div>
     </div>
 
     <script>
+        // 全局变量声明
+        let currentMode = 'text';  // 当前模式：text 或 image
+        let currentModel = 'deepseek-r1';  // 当前模型
+
         // 主题切换
         function updateTheme(isDark) {
             document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -804,92 +912,195 @@
         // 标签切换
         document.querySelectorAll('.tag').forEach(tag => {
             tag.addEventListener('click', () => {
+                // 移除所有标签的激活状态
                 document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+                // 添加当前标签的激活状态
                 tag.classList.add('active');
-                // TODO: 根据标签筛选对话
+                
+                // 获取标签类型
+                const tagType = tag.querySelector('span').textContent;
+                console.log('切换到标签:', tagType);
+                
+                // 获取输入框和前缀元素
+                const messageInput = document.getElementById('message-input');
+                const inputPrefix = document.getElementById('input-prefix');
+                const inputBox = document.querySelector('.input-box');
+                
+                // 如果是图像生成标签，切换到图像模式
+                if (tagType === '图像生成') {
+                    if (window.electron) {
+                        window.electron.send('switch-mode', 'image');
+                    }
+                } else {
+                    if (window.electron) {
+                        window.electron.send('switch-mode', 'text');
+                    }
+                }
             });
         });
 
-        // 发送消息
+        // 获取输入框元素
         const messageInput = document.getElementById('message-input');
         const sendButton = document.getElementById('send-button');
         const chatContainer = document.getElementById('chat-container');
 
-        function addMessage(text, isUser = false) {
-            const message = document.createElement('div');
-            message.className = `message ${isUser ? 'user' : 'pet'}`;
-            
-            const avatar = document.createElement('img');
-            avatar.className = 'avatar';
-            avatar.src = isUser ? './assets/user.webp' : './assets/pet.webp';
-            
-            const content = document.createElement('div');
-            content.className = 'message-content';
-            
-            const messageText = document.createElement('div');
-            messageText.className = 'message-text';
-            messageText.textContent = text;
-            
-            const time = document.createElement('div');
-            time.className = 'message-time';
-            time.textContent = new Date().toLocaleTimeString();
-            
-            content.appendChild(messageText);
-            content.appendChild(time);
-            message.appendChild(avatar);
-            message.appendChild(content);
-            
-            chatContainer.appendChild(message);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+        // 监听模式切换
+        try {
+            if (window.electron) {
+                window.electron.receive('switch-mode', (mode) => {
+                    const inputPrefix = document.getElementById('input-prefix');
+                    const inputBox = document.querySelector('.input-box');
+                    
+                    if (mode === 'image') {
+                        inputPrefix.style.display = 'flex';
+                        inputBox.classList.add('image-mode');
+                        messageInput.placeholder = '描述你所想象的画面，角色，情绪，场景，风格...';
+                    } else {
+                        inputPrefix.style.display = 'none';
+                        inputBox.classList.remove('image-mode');
+                        messageInput.placeholder = '你可以问我任何问题...';
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('设置模式切换监听器时出错:', error);
         }
 
+        // 监听输入框内容变化
+        messageInput.addEventListener('input', () => {
+            if (messageInput.value.trim() !== '') {
+                messageInput.placeholder = '';
+            } else {
+                const isImageMode = document.querySelector('.input-box').classList.contains('image-mode');
+                messageInput.placeholder = isImageMode ? 
+                    '描述你所想象的画面，角色，情绪，场景，风格...' : 
+                    '你可以问我任何问题...';
+            }
+        });
+
+        // 发送消息
         function sendMessage() {
-            const text = messageInput.value.trim();
-            if (text) {
-                addMessage(text, true);
-                try {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // 添加用户消息
+            appendMessage('user', message);
+            input.value = '';
+
+            // 发送消息到主进程
                     if (window.electron) {
-                        window.electron.send('chat-message', text);
+                console.log('Sending message to main process:', {
+                    message: message,
+                    type: currentMode,
+                    model: currentModel
+                });
+                
+                window.electron.send('chat-message', {
+                    message: message,
+                    type: currentMode,
+                    model: currentModel
+                });
                     } else {
-                        console.error('electron 对象未定义');
-                        addMessage('抱歉，系统出现错误，请稍后重试。', false);
-                    }
-                } catch (error) {
-                    console.error('发送消息时出错:', error);
-                    addMessage('抱歉，发送消息时出现错误，请稍后重试。', false);
-                }
-                messageInput.value = '';
+                console.error('electron object not found');
+                appendMessage('pet', '无法发送消息：electron对象未找到');
             }
         }
 
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+        // 发送按钮点击事件
+        document.querySelector('.send-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            sendMessage();
+        });
+
+        // 输入框回车事件
+        document.querySelector('.input-box input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         });
 
-        // 接收消息响应
-        try {
-            if (window.electron) {
-                window.electron.receive('chat-message-response', (response) => {
-                    if (response && response.success && response.response && response.response.message) {
-                        addMessage(response.response.message);
-                    } else {
-                        console.error('无效的响应格式:', response);
-                        addMessage('抱歉，收到无效的响应格式。', false);
-                    }
-                });
-            } else {
-                console.error('electron 对象未定义');
+        // 处理接收到的消息
+        window.electron.on('chat-response', (response) => {
+            console.log('Received chat response:', response);
+            
+            if (!response || typeof response !== 'object') {
+                console.error('Invalid response format:', response);
+                appendMessage('pet', '收到无效的响应格式');
+                return;
             }
-        } catch (error) {
-            console.error('设置消息接收器时出错:', error);
+            
+            if (!response.success) {
+                console.error('Response indicates failure:', response.error);
+                appendMessage('pet', response.error || '发生错误，请重试');
+                return;
+            }
+            
+            if (!response.content) {
+                console.error('Response has no content:', response);
+                appendMessage('pet', '响应中没有内容');
+                return;
+            }
+            
+            appendMessage('pet', response.content, response.type || 'text');
+        });
+
+        // 模型选择器
+        const modelSelector = document.getElementById('model-selector');
+        const modelMenu = document.getElementById('model-menu');
+
+        // 更新模型选择器显示
+        function updateModelSelector(item) {
+            const logo = item.querySelector('img').src;
+            const name = item.querySelector('span').textContent;
+            
+            modelSelector.querySelector('img').src = logo;
+            modelSelector.querySelector('span').textContent = name;
+            modelMenu.classList.remove('show');
+            modelSelector.classList.remove('active');
         }
 
-        // 添加初始问候消息
-        document.addEventListener('DOMContentLoaded', () => {
-            addMessage('你好！我是你的AI宠物助手，很高兴见到你！有什么我可以帮你的吗？', false);
+        // 模型选择器点击事件
+        modelSelector.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // 如果当前是图像生成模式，不允许切换模型
+            const isImageMode = document.querySelector('.input-box').classList.contains('image-mode');
+            if (isImageMode) {
+                return;
+            }
+            modelMenu.classList.toggle('show');
+            modelSelector.classList.toggle('active');
+        });
+
+        // 模型选择
+        document.querySelectorAll('.model-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const model = item.getAttribute('data-model');
+                // 如果当前是图像生成模式且不是豆包模型，不允许切换
+                const isImageMode = document.querySelector('.input-box').classList.contains('image-mode');
+                if (isImageMode && model !== 'doubao') {
+                    return;
+                }
+                
+                currentModel = model;
+                
+                // 更新选中状态
+                document.querySelectorAll('.model-item').forEach(m => m.classList.remove('active'));
+                item.classList.add('active');
+                
+                // 更新选择器显示
+                updateModelSelector(item);
+                
+                console.log('切换到模型:', model);
+            });
+        });
+
+        // 页面加载完成后显示默认欢迎消息
+        window.addEventListener('load', () => {
+            // 添加默认欢迎消息
+            appendMessage('assistant', "你好！我是你的AI助手。我可以：\n1. 回答你的问题\n2. 查询天气信息\n3. 规划路线\n4. 生成图片\n\n请告诉我你需要什么帮助？", 'text');
         });
 
         // 用户信息点击事件
@@ -981,56 +1192,6 @@
             });
         }
 
-        // 模型选择器
-        const modelSelector = document.getElementById('model-selector');
-        const modelMenu = document.getElementById('model-menu');
-        let currentModel = 'deepseek-r1';
-
-        // 更新模型选择器显示
-        function updateModelSelector(item) {
-            const logo = item.querySelector('img').src;
-            const name = item.querySelector('span').textContent;
-            
-            modelSelector.querySelector('img').src = logo;
-            modelSelector.querySelector('span').textContent = name;
-        }
-
-        modelSelector.addEventListener('click', (e) => {
-            e.stopPropagation();
-            modelMenu.classList.toggle('show');
-            modelSelector.classList.toggle('active');
-        });
-
-        document.addEventListener('click', () => {
-            modelMenu.classList.remove('show');
-            modelSelector.classList.remove('active');
-        });
-
-        document.querySelectorAll('.model-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const model = item.getAttribute('data-model');
-                currentModel = model;
-                
-                // 更新选中状态
-                document.querySelectorAll('.model-item').forEach(m => m.classList.remove('active'));
-                item.classList.add('active');
-                
-                // 更新选择器显示
-                updateModelSelector(item);
-                
-                // 关闭菜单
-                modelMenu.classList.remove('show');
-                
-                // TODO: 切换模型的逻辑
-                console.log('切换到模型:', model);
-            });
-        });
-
-        // 初始化默认选中的模型
-        const defaultModel = document.querySelector('.model-item[data-model="deepseek-r1"]');
-        updateModelSelector(defaultModel);
-
         // 标签编辑按钮点击事件
         document.getElementById('tags-edit').addEventListener('click', () => {
             // 切换到AI能力页面
@@ -1039,6 +1200,171 @@
             
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.getElementById('abilities-page').classList.add('active');
+        });
+
+        // 退出图像生成模式
+        document.querySelector('.input-prefix i').addEventListener('click', () => {
+            if (window.electron) {
+                window.electron.send('switch-mode', 'text');
+                // 切换回第一个标签
+                document.querySelectorAll('.tag').forEach(tag => {
+                    if (tag.querySelector('span').textContent === '聊闲话') {
+                        tag.click();
+                    }
+                });
+            }
+        });
+
+        // 初始化地图
+        let map = null;
+        let routeLine = null;
+
+        function initMap() {
+            if (!map) {
+            map = new AMap.Map('map', {
+                    zoom: 11,
+                    center: [121.4737, 31.2304]  // 默认中心点（上海）
+                });
+            }
+        }
+        
+        // 显示路线地图
+        function showRouteMap(routeData) {
+            if (!routeData || !routeData.origin_location || !routeData.destination_location) {
+                console.error('Invalid route data:', routeData);
+                return;
+            }
+            
+            // 初始化地图
+            initMap();
+            
+            // 清除已有的路线
+            if (routeLine) {
+                map.remove(routeLine);
+            }
+
+            // 添加起点和终点标记
+            const originMarker = new AMap.Marker({
+                position: routeData.origin_location.split(','),
+                title: routeData.origin
+            });
+            
+            const destMarker = new AMap.Marker({
+                position: routeData.destination_location.split(','),
+                title: routeData.destination
+            });
+            
+            map.add([originMarker, destMarker]);
+
+            // 绘制路线
+            routeLine = new AMap.Polyline({
+                path: routeData.polyline.split(';').map(point => point.split(',').map(Number)),
+                strokeColor: '#3366FF',
+                strokeWeight: 6,
+                strokeOpacity: 0.8
+            });
+            
+            map.add(routeLine);
+            
+            // 调整地图视野以包含所有点
+            map.setFitView();
+            
+            // 显示地图容器
+            document.getElementById('map-container').style.display = 'block';
+        }
+        
+        // 关闭地图
+        document.getElementById('close-map').addEventListener('click', () => {
+            document.getElementById('map-container').style.display = 'none';
+        });
+        
+        // 修改消息处理函数，添加地图显示功能
+        function appendMessage(type, content, messageType = 'text') {
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            
+            const avatar = document.createElement('img');
+            avatar.className = 'avatar';
+            avatar.src = type === 'user' ? './assets/user.webp' : './assets/pet.webp';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            if (messageType === 'image') {
+                const img = document.createElement('img');
+                img.src = content;
+                img.style.maxWidth = '100%';
+                img.style.borderRadius = '8px';
+                messageContent.appendChild(img);
+            } else {
+                const messageText = document.createElement('div');
+                messageText.className = 'message-text';
+                messageText.textContent = content;
+                messageContent.appendChild(messageText);
+                
+                // 检查是否是路线消息
+                if (content.includes('的路线：')) {
+                    try {
+                        const routeData = JSON.parse(content.split('的路线：')[1]);
+                        if (routeData && routeData.route_data) {
+                            showRouteMap(routeData.route_data);
+                        }
+                    } catch (e) {
+                        console.error('Error parsing route data:', e);
+                    }
+                }
+            }
+            
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = new Date().toLocaleTimeString();
+            messageContent.appendChild(time);
+            
+            message.appendChild(avatar);
+            message.appendChild(messageContent);
+            
+            chatContainer.appendChild(message);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            console.log('Appended message:', { type, content, messageType });
+        }
+
+        // 监听模式切换响应
+        window.electron.on('switch-mode-response', (response) => {
+            console.log('Mode switch response:', response);
+            if (response.success) {
+                const inputPrefix = document.getElementById('input-prefix');
+                const inputBox = document.querySelector('.input-box');
+                const messageInput = document.getElementById('message-input');
+                
+                // 更新当前模式
+                currentMode = response.mode;
+                
+                if (response.mode === 'image') {
+                    // 显示图像生成前缀
+                    inputPrefix.style.display = 'flex';
+                    inputBox.classList.add('image-mode');
+                    messageInput.placeholder = response.placeholder;
+                    // 自动选择豆包模型
+                    currentModel = 'doubao';
+                    updateModelSelector(document.querySelector('.model-item[data-model="doubao"]'));
+                } else {
+                    // 隐藏图像生成前缀
+                    inputPrefix.style.display = 'none';
+                    inputBox.classList.remove('image-mode');
+                    messageInput.placeholder = response.placeholder;
+                    // 自动选择 Deepseek-R1 模型
+                    currentModel = 'deepseek-r1';
+                    updateModelSelector(document.querySelector('.model-item[data-model="deepseek-r1"]'));
+                }
+                
+                console.log('Mode updated:', currentMode);
+                console.log('Prefix display:', inputPrefix.style.display);
+            } else {
+                console.error('Failed to switch mode:', response.error);
+                // 显示错误提示
+                showError('切换模式失败：' + response.error);
+            }
         });
     </script>
 </body>

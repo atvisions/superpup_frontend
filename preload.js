@@ -1,8 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 // 注册事件监听器
-ipcRenderer.on('chat-message-response', (event, response) => {
-  console.log('[Preload] Received chat-message-response:', response);
+ipcRenderer.on('chat-response', (event, response) => {
+  console.log('[Preload] Received chat-response:', response);
 });
 
 ipcRenderer.on('chat-error', (event, error) => {
@@ -13,44 +13,42 @@ ipcRenderer.on('chat-error', (event, error) => {
 contextBridge.exposeInMainWorld('electron', {
     // 发送消息到主进程
     send: (channel, data) => {
-        console.log('[Preload] Sending chat-message:', data);
+        console.log('Sending message:', { channel, data });
         ipcRenderer.send(channel, data);
     },
     
-    // 接收消息响应
-    receive: (channel, func) => {
-        console.log('[Preload] Setting up chat-message-response listener');
-        ipcRenderer.on(channel, (event, ...args) => {
-            console.log('[Preload] Received chat-message-response:', args[0]);
-            func(...args);
-        });
+    // 接收消息
+    on: (channel, callback) => {
+        console.log('Registering listener for:', channel);
+        const subscription = (event, ...args) => {
+            console.log('Received message on channel:', channel, args);
+            callback(...args);
+        };
+        ipcRenderer.on(channel, subscription);
+        
+        // 返回清理函数
+        return () => {
+            console.log('Removing listener for:', channel);
+            ipcRenderer.removeListener(channel, subscription);
+        };
     },
     
-    // 接收错误信息
-    onError: (callback) => {
-        console.log('[Preload] Setting up chat-error listener');
-        ipcRenderer.on('chat-error', (event, error) => {
-            console.log('[Preload] Received chat-error:', error);
-            callback(error);
-        });
+    // 监听主题变化
+    onThemeUpdated: (callback) => {
+        console.log('Registering theme listener');
+        const subscription = (event, isDark) => {
+            console.log('Theme updated:', isDark);
+            callback(isDark);
+        };
+        ipcRenderer.on('theme-updated', subscription);
+        
+        return () => {
+            console.log('Removing theme listener');
+            ipcRenderer.removeListener('theme-updated', subscription);
+        };
     },
     
     // 窗口控制
-    minimize: () => {
-        console.log('[Preload] Sending minimize-window event');
-        ipcRenderer.send('minimize-window');
-    },
-    close: () => {
-        console.log('[Preload] Sending close-window event');
-        ipcRenderer.send('close-window');
-    },
-    
-    // 主题相关
-    onThemeUpdated: (callback) => {
-        console.log('[Preload] Setting up theme listener');
-        ipcRenderer.on('theme-changed', (event, theme) => {
-            console.log('[Preload] Theme updated:', theme);
-            callback(theme === 'dark');
-        });
-    }
+    minimizeWindow: () => ipcRenderer.send('minimize-window'),
+    closeWindow: () => ipcRenderer.send('close-window')
 });
