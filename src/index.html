@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI宠物</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css">
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=YOUR_AMAP_KEY"></script>
+    <style>
+        :root {
+            --app-width: 800px;
+            --header-height: 48px;
+            --nav-width: 48px;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --nav-text: #666666;
+            --nav-active: #1a73e8;
+            --chat-bg: #f5f5f5;
+            --user-bg: #e3f2fd;
+            --pet-bg: #fce4ec;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --border-color: #333333;
+            --nav-text: #999999;
+            --nav-active: #4dabf7;
+            --chat-bg: #2d2d2d;
+            --user-bg: #1e3a5f;
+            --pet-bg: #3d1f2d;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            width: var(--app-width);
+            height: 100vh;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: var(--header-height);
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 16px;
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-right: 16px;
+        }
+
+        .nav {
+            width: var(--nav-width);
+            background-color: var(--bg-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 0;
+            position: fixed;
+            left: 0;
+            top: var(--header-height);
+            bottom: 0;
+            z-index: 90;
+        }
+
+        .nav-item {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--nav-text);
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:hover {
+            background-color: var(--chat-bg);
+            color: var(--nav-active);
+        }
+
+        .nav-item.active {
+            background-color: var(--chat-bg);
+            color: var(--nav-active);
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            margin-left: var(--nav-width);
+            margin-top: var(--header-height);
+            background-color: var(--chat-bg);
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin: 0 8px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            background-color: var(--bg-color);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background-color: var(--user-bg);
+        }
+
+        .message.pet .message-content {
+            background-color: var(--pet-bg);
+        }
+
+        .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-color);
+            white-space: pre-wrap;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: var(--nav-text);
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .input-container {
+            padding: 16px;
+            background-color: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            margin-left: var(--nav-width);
+        }
+
+        .input-box {
+            flex: 1;
+            background-color: var(--chat-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 8px 16px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-box input {
+            flex: 1;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 14px;
+            color: var(--text-color);
+            margin-right: 8px;
+        }
+
+        .input-box input::placeholder {
+            color: var(--nav-text);
+        }
+
+        .send-button {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--nav-active);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.1);
+        }
+
+        .send-button i {
+            font-size: 18px;
+        }
+
+        .map-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-color);
+            z-index: 1000;
+            display: none;
+        }
+
+        #map {
+            width: 100%;
+            height: 70%;
+        }
+
+        .route-info {
+            padding: 16px;
+            height: 30%;
+            overflow-y: auto;
+            background-color: var(--bg-color);
+        }
+
+        .route-info h3 {
+            margin-bottom: 12px;
+            color: var(--text-color);
+        }
+
+        .route-details {
+            margin-bottom: 16px;
+        }
+
+        .route-details div {
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        .route-steps {
+            list-style: none;
+        }
+
+        .route-steps li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+            color: var(--text-color);
+        }
+
+        .route-steps li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--nav-active);
+        }
+
+        .close-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px var(--shadow-color);
+            z-index: 1001;
+        }
+
+        .close-button:hover {
+            background-color: var(--chat-bg);
+        }
+
+        .close-button i {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题栏 -->
+    <header class="header">
+        <div class="header-title">AI宠物</div>
+    </header>
+
+    <!-- 导航栏 -->
+    <nav class="nav">
+        <div class="nav-item active" data-tab="chat">
+            <i class="ri-chat-3-line"></i>
+        </div>
+        <div class="nav-item" data-tab="weather">
+            <i class="ri-sun-line"></i>
+        </div>
+        <div class="nav-item" data-tab="route">
+            <i class="ri-route-line"></i>
+        </div>
+        <div class="nav-item" data-tab="settings">
+            <i class="ri-settings-3-line"></i>
+        </div>
+    </nav>
+
+    <!-- 聊天区域 -->
+    <div class="chat-container" id="chat-container">
+        <!-- 消息会在这里动态添加 -->
+    </div>
+
+    <!-- 输入区域 -->
+    <div class="input-container">
+        <div class="input-box">
+            <input type="text" placeholder="输入消息..." id="message-input">
+        </div>
+        <div class="send-button" id="send-button">
+            <i class="ri-send-plane-fill"></i>
+        </div>
+    </div>
+
+    <!-- 地图容器 -->
+    <div id="map-container" class="map-container" style="display: none;">
+        <div id="map"></div>
+        <div class="route-info">
+            <h3>路线详情</h3>
+            <div class="route-details">
+                <div class="distance"></div>
+                <div class="duration"></div>
+                <div class="steps"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 主题切换
+        function updateTheme(isDark) {
+            document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        }
+
+        // 监听主题变化
+        try {
+            if (window.electron) {
+                window.electron.onThemeUpdated((isDark) => {
+                    updateTheme(isDark);
+                });
+            } else {
+                console.error('electron 对象未定义');
+            }
+        } catch (error) {
+            console.error('设置主题监听器时出错:', error);
+        }
+
+        // 导航切换
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // 发送消息
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const chatContainer = document.getElementById('chat-container');
+
+        function addMessage(text, isUser = false) {
+            const message = document.createElement('div');
+            message.className = `message ${isUser ? 'user' : 'pet'}`;
+            
+            const avatar = document.createElement('img');
+            avatar.className = 'avatar';
+            avatar.src = isUser ? '../user.webp' : '../pet.webp';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            
+            const messageText = document.createElement('div');
+            messageText.className = 'message-text';
+            messageText.textContent = text;
+            
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = new Date().toLocaleTimeString();
+            
+            content.appendChild(messageText);
+            content.appendChild(time);
+            message.appendChild(avatar);
+            message.appendChild(content);
+            
+            chatContainer.appendChild(message);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text) {
+                addMessage(text, true);
+                try {
+                    if (window.electron) {
+                        window.electron.send('chat-message', text);
+                    } else {
+                        console.error('electron 对象未定义');
+                        addMessage('抱歉，系统出现错误，请稍后重试。', false);
+                    }
+                } catch (error) {
+                    console.error('发送消息时出错:', error);
+                    addMessage('抱歉，发送消息时出现错误，请稍后重试。', false);
+                }
+                messageInput.value = '';
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 接收消息响应
+        try {
+            if (window.electron) {
+                window.electron.receive('chat-message-response', (response) => {
+                    if (response && response.success && response.response && response.response.message) {
+                        addMessage(response.response.message);
+                    } else {
+                        console.error('无效的响应格式:', response);
+                        addMessage('抱歉，收到无效的响应格式。', false);
+                    }
+                });
+            } else {
+                console.error('electron 对象未定义');
+            }
+        } catch (error) {
+            console.error('设置消息接收器时出错:', error);
+        }
+
+        // 添加初始问候消息
+        document.addEventListener('DOMContentLoaded', () => {
+            addMessage('你好！我是你的AI宠物助手，很高兴见到你！有什么我可以帮你的吗？', false);
+        });
+
+        // 地图相关代码
+        let map = null;
+        let markers = [];
+        let polyline = null;
+
+        function initMap() {
+            map = new AMap.Map('map', {
+                zoom: 12,
+                center: [121.4737, 31.2304] // 上海坐标
+            });
+        }
+
+        function showRoute(route) {
+            if (!map) {
+                initMap();
+            }
+
+            // 清除之前的标记和路线
+            clearMap();
+
+            // 添加起点和终点标记
+            addMarker(route.start, '起点');
+            addMarker(route.end, '终点');
+
+            // 绘制路线
+            drawPolyline(route.path);
+
+            // 更新路线信息
+            updateRouteInfo(route);
+        }
+
+        function clearMap() {
+            markers.forEach(marker => marker.remove());
+            markers = [];
+            if (polyline) {
+                polyline.remove();
+                polyline = null;
+            }
+        }
+
+        function addMarker(position, title) {
+            const marker = new AMap.Marker({
+                position: position,
+                title: title,
+                map: map
+            });
+            markers.push(marker);
+        }
+
+        function drawPolyline(path) {
+            polyline = new AMap.Polyline({
+                path: path,
+                strokeColor: '#1a73e8',
+                strokeWeight: 6,
+                strokeOpacity: 0.8,
+                map: map
+            });
+        }
+
+        function updateRouteInfo(route) {
+            const distance = document.querySelector('.distance');
+            const duration = document.querySelector('.duration');
+            const steps = document.querySelector('.steps');
+
+            distance.textContent = `总距离：${route.distance}`;
+            duration.textContent = `预计时间：${route.duration}`;
+
+            const stepsList = document.createElement('ul');
+            stepsList.className = 'route-steps';
+            route.steps.forEach(step => {
+                const li = document.createElement('li');
+                li.textContent = step;
+                stepsList.appendChild(li);
+            });
+
+            steps.innerHTML = '';
+            steps.appendChild(stepsList);
+        }
+
+        // 显示地图
+        document.querySelector('[data-tab="route"]').addEventListener('click', () => {
+            const mapContainer = document.getElementById('map-container');
+            mapContainer.style.display = 'block';
+            if (!map) {
+                initMap();
+            }
+        });
+
+        // 关闭地图
+        const closeButton = document.createElement('div');
+        closeButton.className = 'close-button';
+        closeButton.innerHTML = '<i class="ri-close-line"></i>';
+        closeButton.addEventListener('click', () => {
+            document.getElementById('map-container').style.display = 'none';
+        });
+        document.getElementById('map-container').appendChild(closeButton);
+    </script>
+</body>
+</html>
