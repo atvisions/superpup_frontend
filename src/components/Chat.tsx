@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import { useChat } from '../hooks/useChat';
 import './Chat.css';
 
 // 添加 electron 的类型定义
@@ -13,156 +14,157 @@ declare global {
 }
 
 interface Message {
-    type: string;
-    content: string;
+    type: 'user' | 'pet' | 'system' | 'ai' | 'image';
+    content: string | React.ReactNode;
     time: string;
+    isAuthError?: boolean;
 }
 
-const Chat: React.FC = () => {
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            type: 'pet',
-            content: '你好！我是你的AI宠物，很高兴见到你！有什么我可以帮你的吗？',
-            time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-        }
-    ]);
-    const [inputMessage, setInputMessage] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [isImageMode, setIsImageMode] = useState(false);
-    const [currentModel, setCurrentModel] = useState('deepseek-r1');
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+interface ChatProps {
+    onAuthError: () => void;
+}
+
+const Chat: React.FC<ChatProps> = ({ onAuthError }) => {
+    const { messages, isLoading, currentModel, isImageMode, sendMessage } = useChat();
     const inputRef = useRef<HTMLInputElement>(null);
+    const [showModelMenu, setShowModelMenu] = useState(false);
 
-    useEffect(() => {
-        console.log('[Chat] Component mounted');
-        console.log('[Chat] window.electron exists:', !!window.electron);
-        
-        // 监听消息响应
-        if (window.electron) {
-            console.log('[Chat] Setting up chat-message-response listener');
-            window.electron.receive('chat-message-response', (response: any) => {
-                console.log('[Chat] Received message response:', response);
-                if (response.success) {
-                    setMessages(prev => [...prev, {
-                        type: response.type || 'ai',
-                        content: response.response.message,
-                        time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-                    }]);
-                }
-                setIsLoading(false);
-            });
-
-            // 监听错误
-            console.log('[Chat] Setting up error listener');
-            window.electron.onError((error: string) => {
-                console.error('[Chat] Received error:', error);
-                setMessages(prev => [...prev, {
-                    type: 'ai',
-                    content: error,
-                    time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-                }]);
-                setIsLoading(false);
-            });
-
-            // 监听模式切换
-            console.log('[Chat] Setting up switch-mode listener');
-            window.electron.receive('switch-mode', (mode: string) => {
-                console.log('[Chat] Switching to mode:', mode);
-                setIsImageMode(mode === 'image');
-                if (mode === 'image') {
-                    setCurrentModel('doubao');
-                }
-                setInputMessage('');
-            });
-        } else {
-            console.error('[Chat] window.electron is not available');
-        }
-    }, []);
-
-    const handleSendMessage = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inputMessage.trim() || isLoading) return;
-
-        console.log('[Chat] Sending message:', inputMessage);
-        console.log('[Chat] Current mode:', isImageMode ? 'image' : 'text');
-        console.log('[Chat] Current model:', currentModel);
-        
-        const newMessage: Message = {
-            type: 'user',
-            content: inputMessage,
-            time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
-        };
-
-        setMessages(prev => [...prev, newMessage]);
-        setInputMessage('');
-        setIsLoading(true);
-
-        // 发送消息到后端
-        if (window.electron) {
-            const messageData = {
-                message: inputMessage,
-                type: isImageMode ? 'image' : 'text',
-                model: isImageMode ? 'doubao' : currentModel
-            };
-            console.log('[Chat] Sending message data:', messageData);
-            window.electron.send('chat-message', messageData);
-        } else {
-            console.error('[Chat] Cannot send message: window.electron is not available');
-            setIsLoading(false);
+        const input = inputRef.current;
+        if (input && input.value.trim()) {
+            sendMessage(input.value.trim());
+            input.value = '';
         }
     };
 
-    const handleExitImageMode = () => {
-        console.log('[Chat] Exiting image mode');
-        setIsImageMode(false);
-        setInputMessage('');
+    const handleModelSelect = (model: string) => {
         if (window.electron) {
-            window.electron.send('switch-mode', 'text');
+            window.electron.send('switch-model', model);
         }
+        setShowModelMenu(false);
     };
 
     return (
-        <div className="chat-container">
-            {isImageMode && (
-                <div className="image-mode-header">
-                    <span className="image-mode-text">@图像生成</span>
-                    <button className="exit-image-mode" onClick={handleExitImageMode}>
-                        <i className="ri-arrow-left-line"></i>
-                    </button>
+        <div className="chat-page">
+            <div className="tags-container">
+                <div className="tags-wrapper">
+                    <div className={`tag ${!isImageMode ? 'active' : ''}`} onClick={() => window.electron?.send('switch-mode', 'text')}>
+                        <i className="ri-chat-smile-2-line"></i>
+                        <span>聊闲话</span>
+                    </div>
+                    <div className={`tag ${isImageMode ? 'active' : ''}`} onClick={() => window.electron?.send('switch-mode', 'image')}>
+                        <i className="ri-image-edit-line"></i>
+                        <span>图像生成</span>
+                    </div>
+                    <div className="tag">
+                        <i className="ri-search-line"></i>
+                        <span>AI搜索</span>
+                    </div>
+                    <div className="tag">
+                        <i className="ri-book-read-line"></i>
+                        <span>AI阅读</span>
+                    </div>
+                    <div className="tag">
+                        <i className="ri-code-line"></i>
+                        <span>AI编程</span>
+                    </div>
+                    <div className="tag">
+                        <i className="ri-translate-2"></i>
+                        <span>翻译</span>
+                    </div>
                 </div>
-            )}
-            <div className="chat-messages">
+                <div className="tags-edit">
+                    <i className="ri-settings-line"></i>
+                </div>
+            </div>
+
+            <div className="messages-container">
                 {messages.map((message, index) => (
-                    <div key={index} className={`message ${message.type === 'user' ? 'user' : 'ai'}`}>
+                    <div key={index} className={`message ${message.type}`}>
+                        <img
+                            src={message.type === 'user' ? './assets/user.webp' : './assets/ai.webp'}
+                            alt={message.type === 'user' ? '用户头像' : 'AI头像'}
+                            className="avatar"
+                        />
                         <div className="message-content">
-                            {message.type === 'image' ? (
-                                <img src={message.content} alt="AI生成的图片" className="generated-image" />
-                            ) : (
-                                message.content
-                            )}
+                            <div className="message-text">
+                                {message.isAuthError ? (
+                                    <div className="auth-message">
+                                        请先<span className="login-text" onClick={() => onAuthError()}>登录</span>后再继续对话
+                                    </div>
+                                ) : (
+                                    typeof message.content === 'string' ? message.content : message.content
+                                )}
+                            </div>
+                            <div className="message-time">{message.time}</div>
                         </div>
                     </div>
                 ))}
-                {isLoading && (
-                    <div className="message ai">
-                        <div className="message-content loading">正在思考...</div>
-                    </div>
-                )}
             </div>
-            <form onSubmit={handleSendMessage} className="chat-input-form">
-                <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder={isImageMode ? "描述你想要生成的图片..." : "输入消息..."}
-                    disabled={isLoading}
-                    className="chat-input"
-                    ref={inputRef}
-                />
-                <button type="submit" disabled={isLoading} className="send-button">
-                    发送
-                </button>
-            </form>
+
+            <div className="input-wrapper">
+                <form onSubmit={handleSubmit} className="input-container">
+                    <div className={`input-box ${isImageMode ? 'image-mode' : ''}`}>
+                        <div className="input-area">
+                            {isImageMode && (
+                                <div className="input-prefix">
+                                    <i className="ri-arrow-left-line" onClick={() => window.electron?.send('switch-mode', 'text')}></i>
+                                    <span>@图像生成</span>
+                                </div>
+                            )}
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                placeholder={isImageMode ? '描述你所想象的画面，角色，情绪，场景，风格...' : '你可以问我任何问题...'}
+                            />
+                        </div>
+                        <div className="input-bottom">
+                            <div className={`model-selector ${showModelMenu ? 'active' : ''}`} onClick={() => setShowModelMenu(!showModelMenu)}>
+                                <img src={`./assets/${currentModel}.png`} alt={currentModel} className="model-logo" />
+                                <span>{currentModel}</span>
+                                <i className="ri-arrow-down-s-line"></i>
+                                {showModelMenu && (
+                                    <div className="model-menu">
+                                        <div className={`model-item ${currentModel === 'deepseek-r1' ? 'active' : ''}`} onClick={() => handleModelSelect('deepseek-r1')}>
+                                            <img src="./assets/deepseek.png" alt="Deepseek" />
+                                            <span>Deepseek-R1</span>
+                                        </div>
+                                        <div className={`model-item ${currentModel === 'deepseek-v3' ? 'active' : ''}`} onClick={() => handleModelSelect('deepseek-v3')}>
+                                            <img src="./assets/deepseek.png" alt="Deepseek" />
+                                            <span>Deepseek-v3</span>
+                                        </div>
+                                        <div className={`model-item ${currentModel === 'doubao' ? 'active' : ''}`} onClick={() => handleModelSelect('doubao')}>
+                                            <img src="./assets/doubao.png" alt="豆包" />
+                                            <span>豆包</span>
+                                        </div>
+                                        <div className={`model-item ${currentModel === 'ernie' ? 'active' : ''}`} onClick={() => handleModelSelect('ernie')}>
+                                            <img src="./assets/ernie.png" alt="文心一言" />
+                                            <span>文心一言</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="input-right">
+                                <div className="input-actions">
+                                    <div className="input-action">
+                                        <i className="ri-image-line"></i>
+                                    </div>
+                                    <div className="input-action">
+                                        <i className="ri-attachment-2"></i>
+                                    </div>
+                                    <div className="input-action">
+                                        <i className="ri-mic-line"></i>
+                                    </div>
+                                </div>
+                                <button type="submit" className="send-button">
+                                    <i className="ri-send-plane-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 };

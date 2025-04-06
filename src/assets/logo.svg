@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="72px" height="76px" viewBox="0 0 72 76" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>形状结合</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#B876D8" offset="0%"></stop>
+            <stop stop-color="#6D25F1" offset="100%"></stop>
+        </linearGradient>
+        <path d="M111.25,33.75 L122,72 L87.5,107 L52,72 L63,33.75 L87.5,48.25 L111.25,33.75 Z M88,61 L65.5,74 L86.75,96.75 L110,74 L88,61 Z M68.5,49 L59,67 L78.5,54.25 L68.5,49 Z M107,49 L97,54.25 L116.5,67 L107,49 Z" id="path-2"></path>
+        <filter x="-2.9%" y="-1.4%" width="105.7%" height="105.5%" filterUnits="objectBoundingBox" id="filter-3">
+            <feOffset dx="0" dy="1" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="0.5" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.5 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="形状结合" transform="translate(-51, -33)">
+            <use fill="black" fill-opacity="1" filter="url(#filter-3)" xlink:href="#path-2"></use>
+            <use fill="url(#linearGradient-1)" fill-rule="evenodd" xlink:href="#path-2"></use>
+        </g>
+    </g>
+</svg>

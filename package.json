@@ -1,24 +1,33 @@
 {
-  "name": "pet-frontend",
+  "name": "superpup",
   "version": "1.0.0",
-  "description": "AI宠物对话应用前端",
+  "description": "AI宠物对话应用",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --debug",
-    "build": "electron-builder"
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:3001 && cross-env NODE_ENV=development electron . --inspect",
+    "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
+    "build": "vite build && electron-builder",
+    "preview": "vite preview"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/react": "^18.2.0",
+    "@types/react-devtools": "^3.6.2",
     "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.0",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "electron": "^28.1.0",
-    "electron-builder": "^24.9.1",
+    "electron-builder": "^24.13.3",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vite": "^5.4.17",
+    "wait-on": "^7.2.0"
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -27,13 +36,20 @@
     "react-dom": "^18.2.0"
   },
   "build": {
-    "appId": "com.pet.chat",
-    "productName": "AI宠物",
+    "appId": "com.superpup.app",
+    "productName": "超级小狗",
     "mac": {
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "icon": "src/assets/icon.png",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "darkModeSupport": true
     },
     "files": [
-      "**/*",
+      "dist/**/*",
+      "main.js",
       "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
       "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
       "!**/node_modules/*.d.ts",
@@ -45,6 +61,12 @@
       "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
       "!**/{appveyor.yml,.travis.yml,circle.yml}",
       "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets",
+        "to": "assets"
+      }
     ]
   }
 }

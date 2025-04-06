@@ -1,84 +1,766 @@
-.app {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background-color: var(--bg-color);
-  font-family: 'Noto Sans SC', sans-serif;
+/* 基础变量 */
+:root {
+  --primary: #6366f1;
+  --secondary: #a855f7;
+  --sidebar-width: 240px;
+  --bg-hover: #F3F4F6;
+  --bg-active: rgba(124, 58, 237, 0.12);
+  --text-primary: #1F2937;
+  --text-secondary: #6B7280;
+  --bg-sidebar: #f8fafc;
+  --bg-main: #ffffff;
+  --primary-light: #9f7aea;
+  --primary-dark: #6b46c1;
+  --primary-gradient: linear-gradient(135deg, #6B4EFF 0%, #8A6FFF 100%);
+  --bg-white: #FFFFFF;
+  --text-tertiary: #9ca3af;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --primary-color: #6B4EFF;
+  --primary-hover: #5A3FE0;
+  --bg-light: #F7F7F7;
+  --border-color: #E5E7EB;
+  --content-max-width: 1000px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
 }
 
-/* 全局样式 */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* 基础重置 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: 'Noto Sans SC', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #fdf2f8;
+  -webkit-user-select: none;
 }
 
-/* 自定义颜色变量 */
-:root {
-  --primary-color: #1a73e8;
-  --secondary-color: #e3f2fd;
-  --text-color: #333333;
-  --border-color: #e0e0e0;
-  --background-color: #ffffff;
-  --error-color: #d32f2f;
-  --success-color: #2e7d32;
+/* 应用布局 */
+.app {
+  display: flex;
+  height: 100vh;
+  background: var(--bg-light);
 }
 
-/* Tailwind 配置 */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
 
-/* 自定义颜色 */
-.text-primary {
+/* 侧边栏 */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--bg-white);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+  padding: var(--spacing-lg);
+}
+
+/* 侧边栏内容 */
+.sidebar-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm);
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-lg);
+  -webkit-app-region: drag;
+  margin-top:20px
+}
+
+.app-logo img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  -webkit-app-region: no-drag;
+}
+
+.app-logo-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.app-logo-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.app-logo-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* 导航菜单 */
+.nav-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  color: #4b5563;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background-color: #f9fafb;
+}
+
+.nav-item.active {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.nav-item i {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 20px;
+}
+
+/* 激活状态下隐藏 line 图标 */
+.nav-item.active .ri-message-3-line,
+.nav-item.active .ri-palette-line,
+.nav-item.active .ri-film-line,
+.nav-item.active .ri-headphone-line,
+.nav-item.active .ri-slideshow-line,
+.nav-item.active .ri-file-user-line,
+.nav-item.active .ri-braces-line {
+  display: none;
+}
+
+/* 非激活状态下隐藏 fill 图标 */
+.nav-item:not(.active) .ri-message-3-fill,
+.nav-item:not(.active) .ri-palette-fill,
+.nav-item:not(.active) .ri-film-fill,
+.nav-item:not(.active) .ri-headphone-fill,
+.nav-item:not(.active) .ri-slideshow-fill,
+.nav-item:not(.active) .ri-file-user-fill,
+.nav-item:not(.active) .ri-braces-fill {
+  display: none;
+}
+
+/* 底部工具栏 */
+.sidebar-footer {
+  background-color: #f3f4f6;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  -webkit-app-region: no-drag;
+}
+
+.tool-button {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  transition: all 0.2s;
+}
+
+.tool-button:hover {
+  color: var(--primary);
+  background-color: var(--bg-hover);
+}
+
+.tool-button i {
+  font-size: 16px;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+/* 主内容区域 */
+.message-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-xl);
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.message-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.message-container::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 20px;
+}
+
+/* 输入容器 */
+.input-container {
+  padding: 16px;
+  background: white;
+  border-top: 1px solid var(--border-color);
+}
+
+.input-wrapper {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.input-area {
+  width: 100%;
+  min-height: 120px;
+  max-height: 320px;
+  padding: 16px;
+  padding-bottom: 56px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-white);
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.input-area:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(107, 78, 255, 0.1);
+}
+
+.input-area::placeholder {
+  color: var(--text-secondary);
+}
+
+.input-tools {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 36px;
+}
+
+.left-tools,
+.right-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input-tools button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.input-tools button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.input-tools button i {
+  font-size: 18px;
+}
+
+.input-tools button.send-button {
+  background: var(--primary-color);
+  color: white;
+  width: 36px;
+  height: 36px;
+}
+
+.input-tools button.send-button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.shortcuts-hint {
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+/* 技能栏 */
+.skills-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 4px 0;
+  position: relative;
+}
+
+.skills-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 4px;
+}
+
+/* 模型选择器 */
+.agent-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--bg-white);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border-color);
+  min-width: 140px;
+  height: 32px;
+  position: relative;
+  z-index: 1000;
+}
+
+.agent-select:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+}
+
+.agent-select .avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 1px solid var(--border-color);
+}
+
+.agent-select .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.agent-select span {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+
+.agent-select i.arrow {
+  font-size: 14px;
+  transition: transform 0.2s;
+}
+
+.agent-select.open i.arrow {
+  transform: rotate(180deg);
+}
+
+/* 模型下拉菜单 */
+.agent-dropdown {
+  position: fixed;
+  min-width: 280px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1001;
+  padding: 6px;
+  overflow-y: auto;
+  display: none;
+}
+
+.agent-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.agent-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agent-dropdown::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.3);
+  border-radius: 20px;
+}
+
+.agent-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.agent-option:hover {
+  background: var(--bg-hover);
+}
+
+.agent-option .avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  overflow: hidden;
+}
+
+.agent-option .avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.agent-option .info {
+  flex: 1;
+  min-width: 0;
+}
+
+.agent-option .name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-option .type {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 技能标签 */
+.skill-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.skill-tag i {
+  font-size: 16px;
+}
+
+.skill-tag:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.skill-tag.active {
+  background: var(--bg-hover);
   color: var(--primary-color);
 }
 
-.bg-primary {
-  background-color: var(--primary-color);
-}
-
-.bg-secondary {
-  background-color: var(--secondary-color);
-}
-
-/* 按钮样式 */
-button {
+.coins-manage {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
   cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.coins-manage:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* 输入工具栏 */
+.input-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+}
+
+.input-toolbar .tool-button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  background: transparent;
   border: none;
-  outline: none;
-  background: none;
-  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-/* 输入框样式 */
-input {
+.input-toolbar .tool-button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.input-toolbar .tool-button i {
+  font-size: 20px;
+}
+
+.input-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tool-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.tool-buttons button {
+  width: 28px;
+  height: 28px;
   border: none;
-  outline: none;
+  border-radius: 6px;
+  background: var(--bg-white);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--border-color);
+}
+
+.input-actions {
+  position: absolute;
+  right: var(--spacing-lg);
+  bottom: 50%;
+  transform: translateY(50%);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.input-actions .tool-button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.input-actions .tool-button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.send-button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--primary-gradient);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+.send-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+}
+
+.send-button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.send-button i {
+  font-size: 16px;
+}
+
+.model-select {
+  position: absolute;
+  right: 60px;
+  bottom: 70px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--bg-light);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.model-select i {
+  font-size: 16px;
+}
+
+.ml-auto {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.input-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.model-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.input-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.input-shortcuts button {
+  border: none;
   background: none;
-  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
-/* 动画 */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.input-shortcuts button:hover {
+  color: #374151;
 }
 
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
-} 
+.chat-history {
+  padding: 12px 0;
+  border-top: 1px solid #f3f4f6;
+}
+
+.history-title {
+  padding: 0 8px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-title svg {
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  box-sizing: content-box;
+}
+
+.history-title svg:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.chat-history .nav-item {
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+.chat-history .nav-item i {
+  font-size: 16px;
+}

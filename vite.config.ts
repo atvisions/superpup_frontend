@@ -4,23 +4,29 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  root: path.join(__dirname, 'src'),
+  base: process.env.NODE_ENV === 'development' ? '/' : './',
+  root: __dirname,
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@assets': path.resolve(__dirname, 'src/assets'),
+      '@styles': path.resolve(__dirname, 'src/styles'),
+      '@components': path.resolve(__dirname, 'src/components'),
+    },
+  },
   build: {
-    outDir: path.join(__dirname, 'dist'),
+    outDir: path.resolve(__dirname, 'dist'),
     emptyOutDir: true,
+    assetsDir: 'assets',
     rollupOptions: {
-      output: {
-        format: 'es',
-        entryFileNames: '[name].js',
-        chunkFileNames: '[name].js',
-        assetFileNames: '[name].[ext]'
-      }
-    }
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+      },
+    },
   },
   server: {
-    port: 3000,
-    headers: {
-      'Content-Type': 'application/javascript'
-    }
-  }
+    port: 3001,
+    strictPort: true,
+    host: true,
+  },
 }); 
